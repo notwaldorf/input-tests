@@ -1,0 +1,7 @@
+{
+  "name": "input-tests",
+  "private": true,
+  "dependencies": {
+    "webcomponentsjs": "webcomponents/webcomponentsjs#v1"
+  }
+}

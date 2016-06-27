@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+<head>
+  <title>basic-input v0 spec</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <basic-input label="batman"></basic-input>
+  <basic-input></basic-input>
+  <basic-input id="attrTest"></basic-input>
+</body>
+
+<template id="template">
+  <style>
+    :host {
+      display: inline-block;
+      box-sizing: border-box;
+      position: relative;
+      font-family: sans-serif;
+      padding-top: 20px;
+    }
+
+    input {
+      outline: none;
+      box-shadow: none;
+      border: none;
+      color: #212121;
+
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      z-index: 2;
+
+      border-bottom: 1px solid #737373;
+      margin-bottom: 1px;  /* Account for the focused underline being thicker. */
+    }
+
+    input:focus {
+      outline: none;
+      border-bottom: 2px solid #3f51b5;
+      margin-bottom: 0;
+    }
+
+    label {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      width: 100%;
+      color: #737373;
+      pointer-events: none;
+      overflow: hidden;
+      white-space: nowrap;
+      text-align: left;
+
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+
+      -webkit-transition: -webkit-transform 0.25s, width 0.25s;
+      transition: transform 0.25s, width 0.25s;
+      -webkit-transform-origin: left top;
+      transform-origin: left top;
+    }
+
+    input:focus + label {
+      color: #3f51b5;
+    }
+
+    input:focus + label, label.float {
+      -webkit-transform: translateY(-75%) scale(0.75);
+      transform: translateY(-75%) scale(0.75);
+    }
+  </style>
+
+  <input id="input">
+  <label></label>
+
+</template>
+
+<script>
+  let template = document.currentScript.ownerDocument.querySelector('#template');
+
+  function stampTemplate(node) {
+    var el = document.importNode(template.content, true);
+    var root = node.createShadowRoot();
+    root.appendChild(el);
+  }
+
+  class BasicInput extends HTMLElement {
+    attributeChangedCallback(which, oldValue, newValue) {
+      console.log(which);
+
+      if (which == 'label') {
+        this._labelElement.textContent = newValue;
+      }
+    }
+
+    createdCallback() {
+      stampTemplate(this);
+
+      this._inputElement = this.shadowRoot.querySelector('input');
+      this._labelElement = this.shadowRoot.querySelector('label');
+
+      var defaultValue = this.getAttribute('label');
+      if (defaultValue)
+        this._updateLabel(defaultValue);
+
+      this._inputElement.addEventListener('input', this._onInput.bind(this));
+    }
+
+    _updateLabel(text) {
+      this._labelElement.textContent = text;
+    }
+
+    _onInput() {
+      if (this._inputElement.value || this._inputElement.value === 0) {
+        this._labelElement.className = 'float';
+      } else {
+        this._labelElement.className = '';
+      }
+    }
+
+    set label(text) {
+      this._updateLabel(text);
+    }
+
+    get label() {
+      return this._labelElement.textContent;
+    }
+  }
+
+  document.registerElement('basic-input', BasicInput);
+</script>
+
+<script>
+attrTest.label = "label from attr";
+
+var results = [];
+
+for (var i = 0; i < 2000; i++) {
+  let start = performance.now();
+  let element = document.createElement('basic-input');
+  element.label = 'batman';
+  document.body.appendChild(element);
+  element.offsetWidth;
+  let end = performance.now();
+  document.body.removeChild(element);
+  results.push(end - start);
+}
+
+var sum = 0;
+for (var i = 0; i < 2000; i++) {
+  sum += results[i];
+}
+
+console.log('average per element', sum / results.length);
+
+</script>
+</html>
